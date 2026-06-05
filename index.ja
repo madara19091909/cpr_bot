@@ -20,4 +20,4 @@ bot.launch().then(() => {
 
 // إيقاف آمن عند إغلاق السيرفر
 process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGTERM', () => bot.stop('SIGTERM')); 
