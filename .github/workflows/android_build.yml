@@ -18,10 +18,13 @@ jobs:
           python3 tools/make_fixture.py
           python3 tools/make_leveldb_fixture.py
       - name: Generate Android scaffold + overlay
-        run: ./tools/apply_android_overlay.sh
+        run: bash tools/apply_android_overlay.sh
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test --reporter expanded | tee test_report.txt
+      - name: Run Flutter tests
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded | tee test_report.txt
       - run: flutter build apk --debug
       - name: Checksum and build info
         run: |
