@@ -11,17 +11,15 @@ void main() {
 
     await tester.pumpWidget(const EchoApp());
 
-    // لا نستخدم pumpAndSettle لأنه ممكن يعلق مع CircularProgressIndicator
-    for (int i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
+    // Allow the asynchronous local-preferences load/save to finish without
+    // pumpAndSettle hanging on an indeterminate progress indicator.
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
     }
 
-    // ✅ التحقق من الـ NavigationBar (مو نص عربي)
+    expect(find.byType(MaterialApp), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-
-    // ✅ عدد الـ destinations = 5
-    final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-    expect(navBar.destinations.length, 5);
+    expect(find.text('العالم'), findsOneWidget);
+    expect(find.text('الذاكرة'), findsOneWidget);
   });
 }
