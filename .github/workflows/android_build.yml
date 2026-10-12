@@ -1,41 +1,50 @@
-name: android_build
+name: Build ECHO Android APK
 on:
-  push:
-  pull_request:
   workflow_dispatch:
-
+  push:
+    branches: [main, master]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/android-build.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
-      - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.27.4', channel: stable }
-      - name: Generate fixtures (deterministic, synthetic)
-        run: |
-          python3 tools/make_fixture.py
-          python3 tools/make_leveldb_fixture.py
-      - name: Generate Android scaffold + overlay
-        run: bash tools/apply_android_overlay.sh
-      - run: flutter pub get
-      - run: flutter analyze
-      - name: Run Flutter tests
-        run: |
-          set -o pipefail
-          flutter test --reporter expanded | tee test_report.txt
-      - run: flutter build apk --debug
-      - name: Checksum and build info
-        run: |
-          cd build/app/outputs/flutter-apk
-          sha256sum app-debug.apk | tee app-debug.apk.sha256
-          flutter --version > "$GITHUB_WORKSPACE/build_info.txt"
-      - uses: actions/upload-artifact@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          name: mc-manger-debug
-          path: |
-            build/app/outputs/flutter-apk/app-debug.apk
-            build/app/outputs/flutter-apk/app-debug.apk.sha256
-            test_report.txt
-            build_info.txt
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android platform files if missing
+        run: |
+          if [ ! -f android/gradlew ]; then
+            flutter create --org app.echo.privateuniverse --project-name echo_private_universe --platforms=android /tmp/echo_android
+            cp -R /tmp/echo_android/android ./android
+          fi
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Run tests
+        run: flutter test
+      - name: Build APK
+        run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ECHO-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
