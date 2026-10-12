@@ -34,7 +34,6 @@ class _WorldPageState extends State<WorldPage> {
   List<BackupInfo> _backups = [];
   bool _working = false;
   double? _progress;
-  String? _message;
 
   AppController get c => widget.controller;
 
