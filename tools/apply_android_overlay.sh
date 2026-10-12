@@ -13,7 +13,14 @@ if [ ! -d android ]; then
   cp -r "$tmp"/lib "$tmp"/test "$tmp"/pubspec.yaml .
 fi
 
-GRADLE=$(ls android/app/build.gradle.kts android/app/build.gradle 2>/dev/null | head -1)
+if [[ -f android/app/build.gradle.kts ]]; then
+  GRADLE="android/app/build.gradle.kts"
+elif [[ -f android/app/build.gradle ]]; then
+  GRADLE="android/app/build.gradle"
+else
+  echo "Could not find android/app/build.gradle.kts or android/app/build.gradle" >&2
+  exit 1
+fi
 sed -i -E "s/(namespace|applicationId)( *=? *)\"[^\"]+\"/\1\2\"$APP_ID\"/" "$GRADLE"
 if [[ "$GRADLE" == *.kts ]]; then
   printf '\ndependencies {\n    implementation("androidx.documentfile:documentfile:1.0.1")\n}\n' >> "$GRADLE"
