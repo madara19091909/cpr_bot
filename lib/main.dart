@@ -76,8 +76,143 @@ class _EchoHomeState extends State<EchoHome> {
   Widget _glassPill(IconData icon, String text) => Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: Colors.black.withValues(alpha: .28), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white.withValues(alpha: .12))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 13, color: _cyan), const SizedBox(width: 6), Text(text, style: const TextStyle(fontSize: 11, color: Colors.white70))]));
   Widget _stat(String label, String value, IconData icon) => Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: _cyan, size: 19), const SizedBox(height: 10), Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11))]));
   Widget _memoryPage() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_header('MEMORY ARCHIVE', 'ذاكرتك', 'كل أفكارك وذكرياتك بمكان واحد.'), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: TextField(onChanged: (v) => setState(() => _query = v), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'ابحث بذكرياتك...'))), const SizedBox(height: 10), SizedBox(height: 44, child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 18), children: ['الكل', ..._categories].map((c) => Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(label: Text(c), selected: _category == c, onSelected: (_) => setState(() => _category = c)))).toList())), const SizedBox(height: 8), Expanded(child: _filtered.isEmpty ? _empty('ما لقينا ذكريات مطابقة') : ListView.builder(padding: const EdgeInsets.fromLTRB(16,0,16,90), itemCount: _filtered.length, itemBuilder: (_, i) => _memoryTile(_filtered[i]))) ]);
-  Widget _timelinePage() { final list = [..._memories]..sort((a,b) => b.createdAt.compareTo(a.createdAt)); final groups = <String,List<MemoryEntry>>{}; for (final m in list) { final key = '${m.createdAt.year} / ${m.createdAt.month.toString().padLeft(2,'0')}'; groups.putIfAbsent(key, () => []).add(m); } return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_header('TIME TRAVEL', 'رحلتك عبر الزمن', 'ارجع لأي لحظة وشوف شنو كان يشغل بالك.'), Expanded(child: groups.isEmpty ? _empty('أضف أول ذكرى حتى يبدأ خطك الزمني') : ListView(padding: const EdgeInsets.fromLTRB(20,0,20,90), children: groups.entries.map((g) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Row(children: [const Icon(Icons.radio_button_checked, color: _cyan, size: 17), const SizedBox(width: 10), Text(g.key, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _cyan))])), ...g.value.map((m) => Padding(padding: const EdgeInsets.only(left: 7), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(width: 2, height: 88, color: Colors.white12), const SizedBox(width: 14), Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _memoryTile(m, compact: true)))])))]).toList())))]); }
-  Widget _discoverPage() { final counts = <String,int>{}; for (final m in _memories) { counts[m.category] = (counts[m.category] ?? 0) + 1; } final sorted = counts.entries.toList()..sort((a,b) => b.value.compareTo(a.value)); final words = <String,int>{}; for (final m in _memories) { for (final w in '${m.title} ${m.body}'.split(RegExp(r'\s+'))) { final word = w.replaceAll(RegExp(r'[^\u0600-\u06FFa-zA-Z0-9]'), ''); if (word.length >= 4) words[word] = (words[word] ?? 0)+1; } } final repeated = words.entries.where((e) => e.value > 1).toList()..sort((a,b) => b.value.compareTo(a.value)); return ListView(padding: EdgeInsets.zero, children: [_header('PATTERNS & CONNECTIONS', 'اكتشف الروابط', 'لمحات بسيطة عن المواضيع المتكررة بعالمك.'), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(22)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.hub, color: _purple, size: 28), const SizedBox(height: 12), const Text('توزيع ذكرياتك', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)), const SizedBox(height: 5), const Text('حسب التصنيف الذي اخترته لكل ذكرى.', style: TextStyle(color: Colors.white54)), const SizedBox(height: 18), if (sorted.isEmpty) const Text('أضف ذكريات حتى تظهر الإحصائيات.') else ...sorted.map((e) => Padding(padding: const EdgeInsets.only(bottom: 13), child: Column(children: [Row(children: [Text(e.key), const Spacer(), Text('${e.value}', style: const TextStyle(color: _cyan))]), const SizedBox(height: 7), ClipRRect(borderRadius: BorderRadius.circular(8), child: LinearProgressIndicator(value: e.value / _memories.length, minHeight: 7, backgroundColor: Colors.white10))])))])), const SizedBox(height: 14), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(22)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Icon(Icons.manage_search, color: _cyan, size: 28), const SizedBox(height: 12), const Text('كلمات تتكرر', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)), const SizedBox(height: 6), const Text('اكتشاف محلي بسيط للكلمات المشتركة، وليس تحليلًا دلاليًا بالذكاء الاصطناعي.', style: TextStyle(color: Colors.white54, height: 1.4)), const SizedBox(height: 14), Wrap(spacing: 8, runSpacing: 8, children: (repeated.take(12).toList()).map((e) => Chip(avatar: const Icon(Icons.bubble_chart, size: 15), label: Text('${e.key} · ${e.value}'))).toList()), if (repeated.isEmpty) const Text('بعد ماكو كلمات متكررة كفاية.', style: TextStyle(color: Colors.white54))])))), const SizedBox(height: 90)]); }
+  Widget _timelinePage() {
+    final list = [..._memories]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final groups = <String, List<MemoryEntry>>{};
+    for (final m in list) {
+      final key = '${m.createdAt.year} / ${m.createdAt.month.toString().padLeft(2, '0')}';
+      groups.putIfAbsent(key, () => []).add(m);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _header('TIME TRAVEL', 'رحلتك عبر الزمن', 'ارجع لأي لحظة وشوف شنو كان يشغل بالك.'),
+        Expanded(
+          child: groups.isEmpty
+              ? _empty('أضف أول ذكرى حتى يبدأ خطك الزمني')
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
+                  children: groups.entries.map((g) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.radio_button_checked, color: _cyan, size: 17),
+                              const SizedBox(width: 10),
+                              Text(g.key, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _cyan)),
+                            ],
+                          ),
+                        ),
+                        ...g.value.map((m) => Padding(
+                              padding: const EdgeInsets.only(left: 7),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(width: 2, height: 88, color: Colors.white12),
+                                  const SizedBox(width: 14),
+                                  Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 10), child: _memoryTile(m, compact: true))),
+                                ],
+                              ),
+                            )),
+                      ],
+                    );
+                  }).toList(),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _discoverPage() {
+    final counts = <String, int>{};
+    for (final m in _memories) {
+      counts[m.category] = (counts[m.category] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final words = <String, int>{};
+    for (final m in _memories) {
+      for (final w in '${m.title} ${m.body}'.split(RegExp(r'\s+'))) {
+        final word = w.replaceAll(RegExp(r'[^\u0600-\u06FFa-zA-Z0-9]'), '');
+        if (word.length >= 4) words[word] = (words[word] ?? 0) + 1;
+      }
+    }
+    final repeated = words.entries.where((e) => e.value > 1).toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _header('PATTERNS & CONNECTIONS', 'اكتشف الروابط', 'لمحات بسيطة عن المواضيع المتكررة بعالمك.'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(22)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.hub, color: _purple, size: 28),
+                const SizedBox(height: 12),
+                const Text('توزيع ذكرياتك', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
+                const Text('حسب التصنيف الذي اخترته لكل ذكرى.', style: TextStyle(color: Colors.white54)),
+                const SizedBox(height: 18),
+                if (sorted.isEmpty)
+                  const Text('أضف ذكريات حتى تظهر الإحصائيات.')
+                else
+                  ...sorted.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 13),
+                        child: Column(
+                          children: [
+                            Row(children: [Text(e.key), const Spacer(), Text('${e.value}', style: const TextStyle(color: _cyan))]),
+                            const SizedBox(height: 7),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(value: e.value / _memories.length, minHeight: 7, backgroundColor: Colors.white10),
+                            ),
+                          ],
+                        ),
+                      )),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(22)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.manage_search, color: _cyan, size: 28),
+                const SizedBox(height: 12),
+                const Text('كلمات تتكرر', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                const Text('اكتشاف محلي بسيط للكلمات المشتركة، وليس تحليلًا دلاليًا بالذكاء الاصطناعي.', style: TextStyle(color: Colors.white54, height: 1.4)),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: repeated.take(12).map((e) => Chip(
+                    avatar: const Icon(Icons.bubble_chart, size: 15),
+                    label: Text('${e.key} · ${e.value}'),
+                  )).toList(),
+                ),
+                if (repeated.isEmpty)
+                  const Text('بعد ماكو كلمات متكررة كفاية.', style: TextStyle(color: Colors.white54)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 90),
+      ],
+    );
+  }
   Widget _profilePage() => ListView(padding: EdgeInsets.zero, children: [_header('YOUR SPACE', 'مساحتك الخاصة', 'عالمك محفوظ على هذا الجهاز.'), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF1B3150), Color(0xFF17152E)]), borderRadius: BorderRadius.circular(24)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.shield_moon_outlined, color: _cyan, size: 34), SizedBox(height: 14), Text('خصوصيتك أولًا', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)), SizedBox(height: 8), Text('الذكريات محفوظة محليًا على جهازك باستخدام تخزين التطبيق. ماكو حساب ولا مزامنة ولا خادم خارجي.', style: TextStyle(color: Colors.white70, height: 1.6))]))), const SizedBox(height: 14), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: Container(decoration: BoxDecoration(color: _panel, borderRadius: BorderRadius.circular(20)), child: Column(children: [ListTile(leading: const Icon(Icons.auto_awesome, color: _purple), title: const Text('عدد الذكريات'), trailing: Text('${_memories.length}')), const Divider(height: 1, indent: 56), const ListTile(leading: Icon(Icons.storage_outlined, color: _cyan), title: Text('التخزين'), subtitle: Text('محلي على الجهاز فقط')), const Divider(height: 1, indent: 56), const ListTile(leading: Icon(Icons.wifi_off_outlined, color: Color(0xFF8BE3C1)), title: Text('الاتصال'), subtitle: Text('الميزات الأساسية تعمل بدون إنترنت'))]))), const SizedBox(height: 14), Padding(padding: const EdgeInsets.symmetric(horizontal: 18), child: OutlinedButton.icon(onPressed: () async { await showDialog<void>(context: context, builder: (ctx) => AlertDialog(title: const Text('بيانات عالمك'), content: const Text('ميزة التصدير إلى ملف خارجي ستضاف لاحقًا. بياناتك الحالية محفوظة داخل التطبيق على جهازك.'), actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('تمام'))])); }, icon: const Icon(Icons.info_outline), label: const Text('معلومات عن بياناتك'))), const SizedBox(height: 90)]);
   Widget _memoryTile(MemoryEntry m, {bool compact = false}) => Card(color: _panel, margin: const EdgeInsets.only(bottom: 9), child: ListTile(onTap: () => _showMemory(m), leading: Container(width: 42, height: 42, decoration: BoxDecoration(color: _nodeColor(m).withValues(alpha: .13), borderRadius: BorderRadius.circular(14)), child: Icon(_iconFor(m.category), color: _nodeColor(m))), title: Text(m.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)), subtitle: Text(compact ? _date(m.createdAt) : '${m.category}  •  ${_date(m.createdAt)}\n${m.body}', maxLines: compact ? 1 : 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54, height: 1.5)), trailing: const Icon(Icons.chevron_left, color: Colors.white38), isThreeLine: !compact));
   IconData _iconFor(String c) => switch (c) { 'ذكرى' => Icons.favorite_outline, 'هدف' => Icons.flag_outlined, 'شخص' => Icons.person_outline, 'ملاحظة' => Icons.sticky_note_2_outlined, _ => Icons.lightbulb_outline };
