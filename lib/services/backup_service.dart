@@ -48,7 +48,7 @@ typedef ProgressCallback = void Function(int done, int total);
 
 /// Directory-based backups with a SHA-256 manifest.
 ///
-/// Layout:  <root>/<name>/manifest.json  and  <root>/<name>/world/...
+/// Layout: `root/name/manifest.json` and `root/name/world/...`
 /// Consistency: the app cannot tell whether Minecraft is writing to a world,
 /// so every backup is labelled "unverified_snapshot" and the copy is rejected
 /// if any source file changes (size/mtime) while it is being copied.
