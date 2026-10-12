@@ -1,28 +1,16 @@
-name: mc_manger
-description: MC Manger - offline Minecraft Bedrock world manager.
+name: echo_private_universe
+description: ECHO - a private, local-first memory universe.
 publish_to: 'none'
-version: 0.1.0+1
-
+version: 1.0.0+1
 environment:
-  sdk: '>=3.5.0 <4.0.0'
-
+  sdk: '>=3.3.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
-  intl: ^0.19.0
-  crypto: ^3.0.3
-  path: ^1.9.0
-  path_provider: ^2.1.4
   shared_preferences: ^2.3.2
-  archive: ^3.6.1
-  share_plus: ^10.1.4
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-
+  flutter_lints: ^4.0.0
 flutter:
   uses-material-design: true
